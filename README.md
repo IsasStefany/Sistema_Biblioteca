@@ -8,7 +8,6 @@ import java.util.Scanner;
 import java.time.LocalDate;
 import sgbu.PrestamoDAO;
 
-// MAIN ESTA ACTUALIZADO YA QUE SE AUMENTO METODO MOSTRAR TODO Y DEVOLVER  PRESTAMOS + BASE DE DATOS + PENALIZACION
 
 public class Main {
 
@@ -36,15 +35,9 @@ public class Main {
         }
 
         //  Cargar libros desde la base de datos
-         List<LibroFisico> librosBD = libroDAO.obtenerLibros();
+        List<LibroFisico> librosBD = libroDAO.obtenerLibros();
         for (LibroFisico l : librosBD) {
             biblioteca.registrarRecurso(l);
-
-            //  Cargar préstamos desde la base de datos
-            List<Prestamo> prestamosBD = prestamoDAO.obtenerPrestamos();
-            for (Prestamo p : prestamosBD) {
-                biblioteca.registrarPrestamo(p.getUsuario(), p.getRecurso());
-            }
 
         }
 
@@ -274,7 +267,7 @@ public class Main {
         System.out.println(VERDE + " Préstamo registrado correctamente." + RESET);
     }
 
-            // DEVOLVER  PRESTAMOS + BASE DE DATOS + PENALIZACION
+    // DEVOLVER  PRESTAMOS + BASE DE DATOS + PENALIZACION
     private static void devolverPrestamo(Scanner sc, Biblioteca biblioteca) {
         PrestamoDAO prestamoDAO = new PrestamoDAO();
 
@@ -321,6 +314,8 @@ public class Main {
 
     }
 }
+
+
 
 package sgbu;
 
