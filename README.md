@@ -411,17 +411,18 @@ import sgbu.Prestamo;
 import sgbu.Usuario;
 import sgbu.Recurso;
 
-// PrestamoDAO esta actualizado porque se puso  DEVOLVER PRÉSTAMO Y REGISTRAR PENALIZACIÓN incluyendo actualizacion estado de prestamo y Si hubo retraso, registrar penalización
 public class PrestamoDAO {
 
     // INSERTAR PRÉSTAMO
-    public void insertarPrestamo(Prestamo prestamo) {
-        String sql = "INSERT INTO Prestamos (idUsuario, idRecurso, fechaInicio, fechaDevolucion, estado) "
-                + "VALUES (?, ?, ?, ?, ?)";
+    // PrestamoDAO esta actualizado porque se puso  DEVOLVER PRÉSTAMO Y
+    //  REGISTRAR PENALIZACIÓN incluyendo
+    //  actualizacion estado de prestamo y Si hubo retraso, registrar penalización
 
+    public void insertarPrestamo(Prestamo prestamo) {
+        String sql = "INSERT INTO Prestamos (idUsuario, idRecurso, fechaInicio, fechaDevolucion, estado) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, prestamo.getUsuario().getIdUsuario());
             ps.setInt(2, prestamo.getRecurso().getId());
@@ -430,12 +431,21 @@ public class PrestamoDAO {
             ps.setString(5, prestamo.getEstado());
 
             ps.executeUpdate();
-            System.out.println(" Préstamo registrado correctamente en la base de datos.");
+
+            // Obtener ID generado
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                prestamo.setIdPrestamo(idGenerado); // sincronizar memoria con base
+            }
+
+            System.out.println("✅ Préstamo registrado correctamente en la base de datos. ID: " + prestamo.getIdPrestamo());
 
         } catch (SQLException e) {
-            System.err.println(" Error al insertar préstamo: " + e.getMessage());
+            System.err.println("❌ Error al insertar préstamo: " + e.getMessage());
         }
     }
+
 
     // LISTAR TODOS LOS PRÉSTAMOS
     public List<Prestamo> obtenerPrestamos() {
@@ -495,12 +505,14 @@ public class PrestamoDAO {
         }
 
     }
+
     // DEVOLVER PRÉSTAMO Y REGISTRAR PENALIZACIÓN
     public void devolverPrestamo(int idPrestamo, int diasRetraso) {
         String sqlUpdate = "UPDATE Prestamos SET estado = 'Devuelto', fechaDevolucion = GETDATE() WHERE idPrestamo = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+            conn.setAutoCommit(false); // asegurar commit manual
 
             // Actualiza estado del préstamo
             psUpdate.setInt(1, idPrestamo);
@@ -522,19 +534,30 @@ public class PrestamoDAO {
                         System.out.println("💰 Penalización registrada: " + monto + " por " + diasRetraso + " días de retraso.");
                     }
                 }
+                //  - GUARDAR LOS CAMBIOS
+                conn.commit();
+                System.out.println("✅ Cambios guardados en la base de datos.");
 
             } else {
                 System.out.println("⚠️ No se encontró préstamo con ese ID.");
+                conn.rollback(); // Deshacer si no se encontró
             }
 
         } catch (SQLException e) {
             System.err.println("❌ Error al devolver préstamo: " + e.getMessage());
 
+            // Idealmente aquí también deberías hacer rollback
+            try (Connection conn = DBConnection.getConnection()) {
+                conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("❌ Error al hacer rollback: " + ex.getMessage());
+            }
         }
-
     }
-
 }
+
+
+
 
 
 
