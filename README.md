@@ -324,3 +324,123 @@ public class Invitado extends Usuario {
 
 
 
+
+Recurso
+import java.time.LocalDate;
+
+public abstract class Recurso {
+    protected int id;
+    protected String titulo;
+    protected boolean disponible;
+    protected LocalDate fechaIngreso;
+
+    public Recurso(int id, String titulo, LocalDate fechaIngreso) {
+        this.id = id;
+        this.titulo = titulo;
+        this.disponible = true;
+        this.fechaIngreso = fechaIngreso;
+    }
+
+    public int getId() { return id; }
+    public String getTitulo() { return titulo; }
+    public boolean isDisponible() { return disponible; }
+    public LocalDate getFechaIngreso() { return fechaIngreso; }
+
+    public void setDisponible(boolean disponible) { this.disponible = disponible; }
+
+    // Información genérica del recurso
+    public String consultarDetalles() {
+        return String.format("Recurso[id=%d, titulo=%s, disponible=%b]", id, titulo, disponible);
+    }
+}
+
+
+RecursoFisico
+import java.time.LocalDate;
+
+public abstract class RecursoFisico extends Recurso implements Reservable {
+    protected String ubicacionEstante;
+    protected String condicion;
+    private boolean reservado = false;
+
+    public RecursoFisico(int id, String titulo, LocalDate fechaIngreso, String ubicacionEstante, String condicion) {
+        super(id, titulo, fechaIngreso);
+        this.ubicacionEstante = ubicacionEstante;
+        this.condicion = condicion;
+    }
+
+    public String getUbicacionEstante() { return ubicacionEstante; }
+    public String getCondicion() { return condicion; }
+
+    @Override
+    public boolean reservar(String quien, LocalDate fechaInicio, LocalDate fechaFin) {
+        if (!disponible || reservado) return false;
+        reservado = true;
+        return true;
+    }
+
+    @Override
+    public void liberar() { reservado = false; }
+
+    @Override
+    public boolean estaReservado() { return reservado; }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("Fisico[id=%d,titulo=%s,estante=%s,cond=%s,disp=%b]", id, titulo, ubicacionEstante, condicion, disponible);
+    }
+}
+
+
+
+RecursoDigital
+import java.time.LocalDate;
+
+public abstract class RecursoDigital extends Recurso {
+    protected String formato;
+    protected String urlAcceso;
+
+    public RecursoDigital(int id, String titulo, LocalDate fechaIngreso, String formato, String urlAcceso) {
+        super(id, titulo, fechaIngreso);
+        this.formato = formato;
+        this.urlAcceso = urlAcceso;
+    }
+
+    public String getFormato() { return formato; }
+    public String getUrlAcceso() { return urlAcceso; }
+
+    public void visualizarOnline() {
+        System.out.println("Abriendo visor para: " + titulo + " en " + urlAcceso);
+    }
+
+    public void descargar() {
+        System.out.println("Descargando: " + titulo + " formato " + formato);
+    }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("Digital[id=%d,titulo=%s,formato=%s,url=%s]", id, titulo, formato, urlAcceso);
+    }
+}
+
+
+
+
+
+
+Ambiente
+import java.time.LocalDate;
+
+public abstract class Ambiente extends RecursoFisico {
+    protected int capacidad;
+    public Ambiente(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad) {
+        super(id, titulo, fechaIngreso, ubicacion, condicion);
+        this.capacidad = capacidad;
+    }
+    public int getCapacidad() { return capacidad; }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("Ambiente[id=%d,titulo=%s,capacidad=%d]", id, titulo, capacidad);
+    }
+}
