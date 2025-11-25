@@ -1,58 +1,34 @@
+package sgbu.model;
 
-//Alumno: 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class Alumno extends Usuario {
-    private String carrera;
-    private String codigoAlumno;
-    private int ciclo;
-
-    public Alumno(String idUsuario, String nombre, String email, String telefono, String password, String carrera, String codigoAlumno, int ciclo) {
-        super(idUsuario, nombre, email, telefono, password);
-        this.carrera = carrera;
-        this.codigoAlumno = codigoAlumno;
-        this.ciclo = ciclo;
-    }
-    
-    
-    @Override
-    public boolean reservarRecurso(int recursoId, Biblioteca biblioteca) {
-        Recurso r = biblioteca.buscarRecursoPorId(recursoId);
-        if (r instanceof Reservable) {
-            return ((Reservable) r).reservar(this.nombre, LocalDate.now(), LocalDate.now().plusDays(1));
-        }
-        return false;
-    }
-
-    @Override
-    public List<Prestamo> verHistorialPrestamos(Biblioteca biblioteca) {
-        return biblioteca.consultarPrestamosPorUsuario(this.idUsuario);
-    }
-
-    @Override
-    public String toString() {
-        return "Alumno " + nombre + " (" + codigoAlumno + ")";
-    }
-}
-
-Ambiente
 import java.time.LocalDate;
 
-public abstract class Ambiente extends RecursoFisico {
-    protected int capacidad;
-    public Ambiente(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad) {
-        super(id, titulo, fechaIngreso, ubicacion, condicion);
-        this.capacidad = capacidad;
+public class ArticuloDigital extends RecursoDigital {
+    private String revistaOrigen;
+    private String doi;
+
+    public ArticuloDigital(int id, String titulo, LocalDate fechaIngreso,
+                           String formato, String urlAcceso, String revistaOrigen, String doi) {
+        super(id, titulo, fechaIngreso, formato, urlAcceso);
+        this.revistaOrigen = revistaOrigen;
+        this.doi = doi;
     }
-    public int getCapacidad() { return capacidad; }
+
+    public String generarReferencia() {
+        return revistaOrigen + " - DOI: " + doi;
+    }
 
     @Override
     public String consultarDetalles() {
-        return String.format("Ambiente[id=%d,titulo=%s,capacidad=%d]", id, titulo, capacidad);
+        return String.format("ArticuloDigital[id=%d, titulo=%s, revista=%s, doi=%s]", id, titulo, revistaOrigen, doi);
     }
+    public String getRevistaOrigen() {
+    return revistaOrigen;
+}
+
+    public String getDoi() {
+    return doi;
+}
+
 }
 
 Biblioteca
@@ -228,26 +204,67 @@ public class Bibliotecario extends Usuario {
 }
 
 
-Invitado
-import java.time.LocalDate;
+
+
+
+      Usuario
 import java.util.List;
 
-public class Invitado extends Usuario {
-    private String tipoInvitado;
-    private java.time.LocalDate fechaExpiracion;
+public abstract class Usuario {
+    protected String idUsuario;
+    protected String nombre;
+    protected String email;
+    protected String telefono;
+    protected String password;
 
-    public Invitado(String id, String nombre, String email, String telefono, String password, String tipoInvitado, java.time.LocalDate fechaExpiracion) {
-        super(id, nombre, email, telefono, password);
-        this.tipoInvitado = tipoInvitado;
-        this.fechaExpiracion = fechaExpiracion;
+    public Usuario(String idUsuario, String nombre, String email, String telefono, String password) {
+        this.idUsuario = idUsuario;
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
+        this.password = password;
     }
 
+    public String getIdUsuario() { return idUsuario; }
+    public String getNombre() { return nombre; }
+    public String getEmail() { return email; }
+
+    // Acciones delegadas a Prestamo/Biblioteca
+    public abstract boolean reservarRecurso(int recursoId, Biblioteca biblioteca);
+    public abstract java.util.List<Prestamo> verHistorialPrestamos(Biblioteca biblioteca);
+
+    @Override
+    public String toString() {
+        return String.format("Usuario[id=%d,nombre=%s,email=%s]", idUsuario, nombre, email);
+    }
+}
+
+
+
+//Alumno: 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Alumno extends Usuario {
+    private String carrera;
+    private String codigoAlumno;
+    private int ciclo;
+
+    public Alumno(String idUsuario, String nombre, String email, String telefono, String password, String carrera, String codigoAlumno, int ciclo) {
+        super(idUsuario, nombre, email, telefono, password);
+        this.carrera = carrera;
+        this.codigoAlumno = codigoAlumno;
+        this.ciclo = ciclo;
+    }
+    
+    
     @Override
     public boolean reservarRecurso(int recursoId, Biblioteca biblioteca) {
-        // Invitados solo pueden reservar ambientes (por ejemplo)
         Recurso r = biblioteca.buscarRecursoPorId(recursoId);
-        if (r instanceof Ambiente) {
-            return ((Reservable) r).reservar(this.nombre, LocalDate.now(), LocalDate.now());
+        if (r instanceof Reservable) {
+            return ((Reservable) r).reservar(this.nombre, LocalDate.now(), LocalDate.now().plusDays(1));
         }
         return false;
     }
@@ -259,9 +276,10 @@ public class Invitado extends Usuario {
 
     @Override
     public String toString() {
-        return "Invitado " + nombre + " (" + tipoInvitado + ")";
+        return "Alumno " + nombre + " (" + codigoAlumno + ")";
     }
 }
+
 
 
 Profesor
@@ -301,313 +319,161 @@ public class Profesor extends Usuario {
 }
 
 
-Revista
+
+Invitado
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Arrays;
 
-public class Revista extends RecursoFisico {
-    private int volumen;
-    private int numero;
+public class Invitado extends Usuario {
+    private String tipoInvitado;
+    private java.time.LocalDate fechaExpiracion;
 
-    public Revista(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int volumen, int numero) {
-        super(id, titulo, fechaIngreso, ubicacion, condicion);
-        this.volumen = volumen;
-        this.numero = numero;
-    }
-
-    public List<String> consultarArticulos() {
-        return Arrays.asList("Artículo 1", "Artículo 2");
+    public Invitado(String id, String nombre, String email, String telefono, String password, String tipoInvitado, java.time.LocalDate fechaExpiracion) {
+        super(id, nombre, email, telefono, password);
+        this.tipoInvitado = tipoInvitado;
+        this.fechaExpiracion = fechaExpiracion;
     }
 
     @Override
-    public String consultarDetalles() {
-        return String.format("Revista[id=%d,titulo=%s,vol=%d,num=%d,disp=%b]", id, titulo, volumen, numero, disponible);
+    public boolean reservarRecurso(int recursoId, Biblioteca biblioteca) {
+        // Invitados solo pueden reservar ambientes (por ejemplo)
+        Recurso r = biblioteca.buscarRecursoPorId(recursoId);
+        if (r instanceof Ambiente) {
+            return ((Reservable) r).reservar(this.nombre, LocalDate.now(), LocalDate.now());
+        }
+        return false;
     }
-}
-SalaEstudio
-import java.time.LocalDate;
-
-public class SalaEstudio extends Ambiente {
-    private int numMesas;
-
-    public SalaEstudio(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad, int numMesas) {
-        super(id, titulo, fechaIngreso, ubicacion, condicion, capacidad);
-        this.numMesas = numMesas;
-    }
-
-    public boolean consultarDisponibilidadMesa() { return disponible; }
 
     @Override
-    public String consultarDetalles() {
-        return String.format("SalaEstudio[id=%d,titulo=%s,capacidad=%d,mesas=%d]", id, titulo, capacidad, numMesas);
+    public List<Prestamo> verHistorialPrestamos(Biblioteca biblioteca) {
+        return biblioteca.consultarPrestamosPorUsuario(this.idUsuario);
     }
-}
-SalaLectura
-import java.time.LocalDate;
-
-public class SalaLectura extends Ambiente {
-    private int numSillas;
-
-    public SalaLectura(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad, int numSillas) {
-        super(id, titulo, fechaIngreso, ubicacion, condicion, capacidad);
-        this.numSillas = numSillas;
-    }
-
-    public int consultarCapacidad() { return capacidad; }
-
-    @Override
-    public String consultarDetalles() {
-        return String.format("SalaLectura[id=%d,titulo=%s,capacidad=%d,sillas=%d]", id, titulo, capacidad, numSillas);
-    }
-}
-
-Usuario
-import java.util.List;
-
-public abstract class Usuario {
-    protected String idUsuario;
-    protected String nombre;
-    protected String email;
-    protected String telefono;
-    protected String password;
-
-    public Usuario(String idUsuario, String nombre, String email, String telefono, String password) {
-        this.idUsuario = idUsuario;
-        this.nombre = nombre;
-        this.email = email;
-        this.telefono = telefono;
-        this.password = password;
-    }
-
-    public String getIdUsuario() { return idUsuario; }
-    public String getNombre() { return nombre; }
-    public String getEmail() { return email; }
-
-    // Acciones delegadas a Prestamo/Biblioteca
-    public abstract boolean reservarRecurso(int recursoId, Biblioteca biblioteca);
-    public abstract java.util.List<Prestamo> verHistorialPrestamos(Biblioteca biblioteca);
 
     @Override
     public String toString() {
-        return String.format("Usuario[id=%d,nombre=%s,email=%s]", idUsuario, nombre, email);
+        return "Invitado " + nombre + " (" + tipoInvitado + ")";
     }
 }
-MAIN
+
+
+
+
+Recurso
 import java.time.LocalDate;
-import java.util.Scanner;
 
-public class Main {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        Biblioteca biblioteca = new Biblioteca(01,"UTP Central","Av. Arequipa");
-        int opcionPrincipal;
+public abstract class Recurso {
+    protected int id;
+    protected String titulo;
+    protected boolean disponible;
+    protected LocalDate fechaIngreso;
 
-        do {
-            System.out.println("\n===== SISTEMA DE GESTIÓN DE BIBLIOTECA =====");
-            System.out.println("1. Gestión de Usuarios");
-            System.out.println("2. Gestión de Recursos");
-            System.out.println("3. Gestión de Préstamos");
-            System.out.println("4. Mostrar todos los datos");
-            System.out.println("5. Salir");
-            System.out.print("Seleccione una opción: ");
-            opcionPrincipal = sc.nextInt();
-            sc.nextLine(); // limpiar buffer
-
-            switch (opcionPrincipal) {
-                case 1 -> menuUsuarios(sc, biblioteca);
-                case 2 -> menuRecursos(sc, biblioteca);
-                case 3 -> menuPrestamos(sc, biblioteca);
-                case 4 -> {
-                    biblioteca.consultarUsuarios();
-                    biblioteca.mostrarRecursos();
-                    biblioteca.mostrarPrestamos();
-                }
-                case 5 -> System.out.println("👋 Saliendo del sistema...");
-                default -> System.out.println("❌ Opción inválida. Intente nuevamente.");
-            }
-        } while (opcionPrincipal != 5);
-
-        sc.close();
+    public Recurso(int id, String titulo, LocalDate fechaIngreso) {
+        this.id = id;
+        this.titulo = titulo;
+        this.disponible = true;
+        this.fechaIngreso = fechaIngreso;
     }
 
-    // -------------------- SUBMENÚ USUARIOS --------------------
-    private static void menuUsuarios(Scanner sc, Biblioteca biblioteca) {
-        int opcion;
-        do {
-            System.out.println("\n--- GESTIÓN DE USUARIOS ---");
-            System.out.println("1. Registrar usuario");
-            System.out.println("2. Mostrar usuarios");
-            System.out.println("3. Volver al menú principal");
-            System.out.print("Seleccione una opción: ");
-            opcion = sc.nextInt();
-            sc.nextLine();
+    public int getId() { return id; }
+    public String getTitulo() { return titulo; }
+    public boolean isDisponible() { return disponible; }
+    public LocalDate getFechaIngreso() { return fechaIngreso; }
 
-            switch (opcion) {
-                case 1 -> {
-                    System.out.print("Id Usuario: ");
-                    String idUsuario = sc.nextLine();
-                    
-                    System.out.print("Nombre: ");
-                    String nombre = sc.nextLine();
-                    
-                    System.out.print("Email: ");
-                    String email = sc.nextLine();
-                    
-                    System.out.print("Telefono: ");
-                    String telefono = sc.nextLine();
-                    
-                    System.out.print("Password: ");
-                    String password = sc.nextLine();
-                    
-                    System.out.print("Carrera: ");
-                    String carrera = sc.nextLine();
-                    
-                    System.out.print("Codigo de Alumno: ");
-                    String codigoAlumno = sc.nextLine();
-                    
-                    System.out.print("Ciclo: ");
-                    int ciclo = sc.nextInt();
-                    
-                    sc.nextLine();
+    public void setDisponible(boolean disponible) { this.disponible = disponible; }
 
-                    Usuario usuario = new Alumno(idUsuario, nombre,  email,  telefono, password, carrera, codigoAlumno, ciclo);
-                    biblioteca.registrarUsuario(usuario);
-                }
-                case 2 -> biblioteca.mostrarUsuarios();
-                case 3 -> System.out.println("Volviendo al menú principal...");
-                default -> System.out.println("Opción inválida.");
-            }
-        } while (opcion != 3);
+    // Información genérica del recurso
+    public String consultarDetalles() {
+        return String.format("Recurso[id=%d, titulo=%s, disponible=%b]", id, titulo, disponible);
+    }
+}
+
+
+RecursoFisico
+import java.time.LocalDate;
+
+public abstract class RecursoFisico extends Recurso implements Reservable {
+    protected String ubicacionEstante;
+    protected String condicion;
+    private boolean reservado = false;
+
+    public RecursoFisico(int id, String titulo, LocalDate fechaIngreso, String ubicacionEstante, String condicion) {
+        super(id, titulo, fechaIngreso);
+        this.ubicacionEstante = ubicacionEstante;
+        this.condicion = condicion;
     }
 
-    // -------------------- SUBMENÚ RECURSOS --------------------
-    private static void menuRecursos(Scanner sc, Biblioteca biblioteca) {
-        int opcion;
-        do {
-            System.out.println("\n--- GESTIÓN DE RECURSOS ---");
-            System.out.println("1. Registrar recurso");
-            System.out.println("2. Mostrar recursos");
-            System.out.println("3. Eliminar recurso");
-            System.out.println("4. Volver al menú principal");
-            System.out.print("Seleccione una opción: ");
-            opcion = sc.nextInt();
-            sc.nextLine();
+    public String getUbicacionEstante() { return ubicacionEstante; }
+    public String getCondicion() { return condicion; }
 
-            switch (opcion) {
-                case 1 -> {
-                System.out.print("ID del recurso: ");
-                int id = sc.nextInt();
-                sc.nextLine(); // limpiar buffer
-
-                System.out.print("Título: ");
-                String titulo = sc.nextLine();
-
-                System.out.print("Ubicación: ");
-                String ubicacion = sc.nextLine();
-
-                System.out.print("Condición: ");
-                String condicion = sc.nextLine();
-
-                System.out.print("Autor: ");
-                String autor = sc.nextLine();
-
-                System.out.print("Número de páginas: ");
-                int numPaginas = sc.nextInt();
-                sc.nextLine(); // limpiar buffer
-
-                // Crear el objeto correctamente con todos los parámetros
-                Recurso r = new LibroFisico(id, titulo, LocalDate.now(), ubicacion, condicion, autor, numPaginas);
-
-                biblioteca.registrarRecurso(r);
-                System.out.println("✅ Libro registrado exitosamente.");
-            }
-
-                case 2 -> biblioteca.mostrarRecursos();
-                case 3 -> {
-                    System.out.print("Ingrese ID del recurso a eliminar: ");
-                    int id = sc.nextInt();
-                    sc.nextLine();
-                    biblioteca.eliminarRecurso(id);
-                }
-                case 4 -> System.out.println("Volviendo al menú principal...");
-                default -> System.out.println("Opción inválida.");
-            }
-        } while (opcion != 4);
+    @Override
+    public boolean reservar(String quien, LocalDate fechaInicio, LocalDate fechaFin) {
+        if (!disponible || reservado) return false;
+        reservado = true;
+        return true;
     }
 
-    // -------------------- SUBMENÚ PRÉSTAMOS --------------------
-    private static void menuPrestamos(Scanner sc, Biblioteca biblioteca) {
-        int opcion;
-        do {
-            System.out.println("\n--- GESTIÓN DE PRÉSTAMOS ---");
-            System.out.println("1. Registrar préstamo");
-            System.out.println("2. Mostrar préstamos");
-            System.out.println("3. Volver al menú principal");
-            System.out.print("Seleccione una opción: ");
-            opcion = sc.nextInt();
-            sc.nextLine();
+    @Override
+    public void liberar() { reservado = false; }
 
-            switch (opcion) {
-                case 1 -> {
-                    
+    @Override
+    public boolean estaReservado() { return reservado; }
 
-                    System.out.print("ID del usuario: ");
-                    String idUsuario = sc.nextLine();
-                    
-                    sc.nextLine();
-                    System.out.print("Nombre: ");
-                    String nombre = sc.nextLine();
-                    
-                    System.out.print("Email: ");
-                    String email = sc.nextLine();
-                    
-                    System.out.print("Telefono: ");
-                    String telefono = sc.nextLine();
-                    
-                    System.out.print("Password: ");
-                    String password = sc.nextLine();
-                    
-                    System.out.print("Carrera: ");
-                    String carrera = sc.nextLine();
-                    
-                    System.out.print("Codigo de Alumno: ");
-                    String codigoAlumno = sc.nextLine();
-                    
-                    System.out.print("Ciclo: ");
-                    int ciclo = sc.nextInt();
-                    
-                    System.out.print("ID del recurso: ");
-                    int idRecurso = sc.nextInt();
-                    
-                    System.out.print("Título: ");
-                    String titulo = sc.nextLine();
-                    sc.nextLine();
-                    System.out.print("Autor: ");
-                    String autor = sc.nextLine();
+    @Override
+    public String consultarDetalles() {
+        return String.format("Fisico[id=%d,titulo=%s,estante=%s,cond=%s,disp=%b]", id, titulo, ubicacionEstante, condicion, disponible);
+    }
+}
 
-                    System.out.print("Ubicación: ");
-                    String ubicacion = sc.nextLine();
 
-                    System.out.print("Condición: ");
-                    String condicion = sc.nextLine();
-                  
 
-                    System.out.print("Número de páginas: ");
-                    int numPaginas = sc.nextInt();                    
-            
-                    sc.nextLine(); // limpiar buffer
-                    
-                    Usuario u = new Alumno(idUsuario, nombre,  email,  telefono, password, carrera, codigoAlumno, ciclo);
-                    Recurso r = new LibroFisico(idRecurso, titulo, LocalDate.now(), ubicacion, condicion, autor, numPaginas);
-                    Prestamo p = new Prestamo(u,r, LocalDate.now(), LocalDate.now().plusDays(7));
+RecursoDigital
+import java.time.LocalDate;
 
-                    biblioteca.registrarPrestamo(u,r);
-                }
-                case 2 -> biblioteca.mostrarPrestamos();
-                case 3 -> System.out.println("Volviendo al menú principal...");
-                default -> System.out.println("Opción inválida.");
-            }
-        } while (opcion != 3);
+public abstract class RecursoDigital extends Recurso {
+    protected String formato;
+    protected String urlAcceso;
+
+    public RecursoDigital(int id, String titulo, LocalDate fechaIngreso, String formato, String urlAcceso) {
+        super(id, titulo, fechaIngreso);
+        this.formato = formato;
+        this.urlAcceso = urlAcceso;
+    }
+
+    public String getFormato() { return formato; }
+    public String getUrlAcceso() { return urlAcceso; }
+
+    public void visualizarOnline() {
+        System.out.println("Abriendo visor para: " + titulo + " en " + urlAcceso);
+    }
+
+    public void descargar() {
+        System.out.println("Descargando: " + titulo + " formato " + formato);
+    }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("Digital[id=%d,titulo=%s,formato=%s,url=%s]", id, titulo, formato, urlAcceso);
+    }
+}
+
+
+
+
+
+
+Ambiente
+import java.time.LocalDate;
+
+public abstract class Ambiente extends RecursoFisico {
+    protected int capacidad;
+    public Ambiente(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad) {
+        super(id, titulo, fechaIngreso, ubicacion, condicion);
+        this.capacidad = capacidad;
+    }
+    public int getCapacidad() { return capacidad; }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("Ambiente[id=%d,titulo=%s,capacidad=%d]", id, titulo, capacidad);
     }
 }
