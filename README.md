@@ -3588,5 +3588,148 @@ public class TesisDigitalesView {
 
 
 
+// fxml
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="18" alignment="CENTER"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="sgbu.CONTROLLER.BibliotecarioViewController"
+      style="-fx-background-color: #f4f4f4; -fx-padding: 40;">
+
+    <Label text="📚 Panel del Bibliotecario" style="-fx-font-size: 25px;"/>
+
+    <Button text="👥 Gestión de Usuarios" fx:id="btnUsuarios" prefWidth="250"/>
+    <Button text="📚 Gestión de Recursos" fx:id="btnRecursos" prefWidth="250"/>
+    <Button text="📋 Préstamos y Devoluciones" fx:id="btnPrestamos" prefWidth="250"/>
+    <Button text="📊 Consultas / Reportes" fx:id="btnConsultas" prefWidth="250"/>
+
+    <Button text="🔒 Cerrar Sesión"
+            fx:id="btnCerrarSesion"
+            style="-fx-background-color: #d9534f; -fx-text-fill: white;"
+            prefWidth="250"/>
+
+</VBox>
+
+
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            style="-fx-background-color: #f5f5f5;">
+
+    <top>
+        <VBox style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <Label text="📋 Préstamos y Devoluciones"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 40;">
+            <Label text="Módulo de préstamos y devoluciones" style="-fx-font-size: 16px;"/>
+            <Label text="(En desarrollo)" style="-fx-font-size: 14px; -fx-text-fill: #888;"/>
+        </VBox>
+    </center>
+
+</BorderPane>
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            style="-fx-background-color: #f5f5f5;">
+
+    <top>
+        <VBox style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <Label text="📚 Gestión de Recursos"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 40;">
+            <Label text="Módulo de gestión de recursos" style="-fx-font-size: 16px;"/>
+            <Label text="(En desarrollo)" style="-fx-font-size: 14px; -fx-text-fill: #888;"/>
+        </VBox>
+    </center>
+
+</BorderPane>
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            style="-fx-background-color: #f5f5f5;">
+
+    <top>
+        <VBox style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <Label text="👥 Gestión de Usuarios"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 40;">
+            <Label text="Módulo de gestión de usuarios" style="-fx-font-size: 16px;"/>
+            <Label text="(En desarrollo)" style="-fx-font-size: 14px; -fx-text-fill: #888;"/>
+        </VBox>
+    </center>
+
+</BorderPane> 
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="sgbu.CONTROLLER.GestionPrestamosController">
+
+    <children>
+        <TableView fx:id="tablaPrestamos" layoutX="20" layoutY="20" prefWidth="760" prefHeight="400">
+            <columns>
+
+                <TableColumn fx:id="colRecurso" text="Recurso" prefWidth="160"/>
+                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="120"/>
+                <TableColumn fx:id="colFechaPrestamo" text="Fecha Préstamo" prefWidth="140"/>
+                <TableColumn fx:id="colFechaLimite" text="Fecha Límite" prefWidth="140"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+                <TableColumn fx:id="colAccion" text="Acción" prefWidth="100"/>
+
+            </columns>
+        </TableView>
+    </children>
+</AnchorPane>
 
 
