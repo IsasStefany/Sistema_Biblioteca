@@ -3733,3 +3733,1233 @@ public class TesisDigitalesView {
 </AnchorPane>
 
 
+// DAOS
+
+
+package sgbu.DAO;
+
+import sgbu.MODEL.Alumno;
+import sgbu.MODEL.DBConnection;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class AlumnoDAO {
+
+    //  Elimina atributos innecesarios
+    public AlumnoDAO() {
+        // Constructor vacío limpio (sin lógica)
+    }
+
+    //  Agregar alumno
+    public void agregarAlumno(Alumno alumno) {
+        String sql = "INSERT INTO Alumnos (idUsuario, nombre, email, telefono, password, carrera, codigoAlumno, ciclo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, alumno.getIdUsuario());
+            stmt.setString(2, alumno.getNombre());
+            stmt.setString(3, alumno.getEmail());
+            stmt.setString(4, alumno.getTelefono());
+            stmt.setString(5, alumno.getPassword());
+            stmt.setString(6, alumno.getCarrera());
+            stmt.setString(7, alumno.getCodigoAlumno());
+            stmt.setInt(8, alumno.getCiclo());
+
+            stmt.executeUpdate();
+            System.out.println(" Alumno agregado correctamente.");
+
+        } catch (SQLException e) {
+            System.out.println(" Error al agregar alumno: " + e.getMessage());
+        }
+    }
+
+    //  Listar alumnos
+    public List<Alumno> listarAlumnos() {
+        List<Alumno> lista = new ArrayList<>();
+        String sql = "SELECT * FROM Alumnos";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Alumno a = new Alumno(
+                        rs.getString("idUsuario"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("carrera"),
+                        rs.getString("codigoAlumno"),
+                        rs.getInt("ciclo"),
+                        rs.getInt("minutosPermitidos"));
+                lista.add(a);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(" Error al listar alumnos: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    //  Buscar alumno
+    public Alumno buscarAlumnoPorId(String idUsuario) {
+        String sql = "SELECT * FROM Alumnos WHERE idUsuario = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, idUsuario);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Alumno(
+                        rs.getString("idUsuario"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("carrera"),
+                        rs.getString("codigoAlumno"),
+                        rs.getInt("ciclo"),
+                        rs.getInt("minutosPermitidos"));
+            }
+
+        } catch (SQLException e) {
+            System.out.println(" Error al buscar alumno: " + e.getMessage());
+        }
+        return null;
+    }
+
+    //  Actualizar alumno
+    public void actualizarAlumno(Alumno alumno) {
+        String sql = "UPDATE Alumnos SET nombre=?, email=?, telefono=?, password=?, carrera=?, codigoAlumno=?, ciclo=? WHERE idUsuario=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, alumno.getNombre());
+            stmt.setString(2, alumno.getEmail());
+            stmt.setString(3, alumno.getTelefono());
+            stmt.setString(4, alumno.getPassword());
+            stmt.setString(5, alumno.getCarrera());
+            stmt.setString(6, alumno.getCodigoAlumno());
+            stmt.setInt(7, alumno.getCiclo());
+            stmt.setString(8, alumno.getIdUsuario());
+
+            int filas = stmt.executeUpdate();
+            if (filas > 0) {
+                System.out.println(" Alumno actualizado correctamente.");
+            } else {
+                System.out.println(" No se encontró el alumno.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(" Error al actualizar alumno: " + e.getMessage());
+        }
+    }
+
+    //  Eliminar alumno
+    public void eliminarAlumno(String idUsuario) {
+        String sql = "DELETE FROM Alumnos WHERE idUsuario = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, idUsuario);
+            int filas = stmt.executeUpdate();
+
+            if (filas > 0) {
+                System.out.println("🗑️ Alumno eliminado correctamente.");
+            } else {
+                System.out.println("⚠️ No se encontró el alumno.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error al eliminar alumno: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+
+package sgbu.DAO;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
+import sgbu.MODEL.DBConnection;
+import sgbu.MODEL.Devolucion;
+
+public class DevolucionDAO {
+
+    // ============================================================
+    // INSERTAR DEVOLUCIÓN
+    // ============================================================
+    public boolean insertar(Devolucion d) {
+        String sql = "INSERT INTO Devoluciones (idPrestamo, fechaDevolucion, estado) VALUES (?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, d.getIdPrestamo());
+            stmt.setDate(2, Date.valueOf(d.getFechaDevolucion()));
+            stmt.setString(3, d.getEstado());
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Error al insertar devolución: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ============================================================
+    // LISTAR TODAS LAS DEVOLUCIONES
+    // ============================================================
+    public List<Devolucion> listarTodos() {
+        List<Devolucion> lista = new ArrayList<>();
+        String sql = "SELECT * FROM Devoluciones";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapDevolucion(rs));
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al listar devoluciones: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+    // ============================================================
+    // BUSCAR DEVOLUCIÓN POR ID
+    // ============================================================
+    public Devolucion buscarPorId(int idDevolucion) {
+        String sql = "SELECT * FROM Devoluciones WHERE idDevolucion = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idDevolucion);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapDevolucion(rs);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al buscar devolución: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    // ============================================================
+    // ACTUALIZAR DEVOLUCIÓN
+    // ============================================================
+    public boolean actualizar(Devolucion d) {
+        String sql = "UPDATE Devoluciones SET idPrestamo = ?, fechaDevolucion = ?, estado = ? WHERE idDevolucion = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, d.getIdPrestamo());
+            stmt.setDate(2, Date.valueOf(d.getFechaDevolucion()));
+            stmt.setString(3, d.getEstado());
+            stmt.setInt(4, d.getIdDevolucion());
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar devolución: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ============================================================
+    // ELIMINAR DEVOLUCIÓN
+    // ============================================================
+    public boolean eliminar(int idDevolucion) {
+        String sql = "DELETE FROM Devoluciones WHERE idDevolucion = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idDevolucion);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Error al eliminar devolución: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ============================================================
+    // MAPEO ResultSet → OBJETO
+    // ============================================================
+    private Devolucion mapDevolucion(ResultSet rs) throws SQLException {
+        return new Devolucion(
+                rs.getInt("idDevolucion"),
+                rs.getInt("idPrestamo"),
+                rs.getDate("fechaDevolucion").toLocalDate(),
+                rs.getString("estado")
+        );
+    }
+
+    public boolean tienePenalizacion(String idU) {
+        return false;
+    }
+}
+
+
+
+package sgbu.DAO;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import sgbu.MODEL.DBConnection;
+import java.time.LocalDate;
+import sgbu.MODEL.LibroFisico;
+
+public class LibroFisicoDAO {
+
+    // INSERTAR LIBRO
+    public void insertarLibro(LibroFisico libro) {
+        String sql = "INSERT INTO LibrosFisicos (id, titulo, fechaIngreso, ubicacion, condicion, autor, numPaginas, disponible) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, libro.getId());
+            ps.setString(2, libro.getTitulo());
+            ps.setDate(3, Date.valueOf(libro.getFechaIngreso()));
+            ps.setString(4, libro.getUbicacionEstante());
+            ps.setString(5, libro.getCondicion());
+            ps.setString(6, libro.getAutor());
+            ps.setInt(7, libro.getNumPaginas());
+            ps.setBoolean(8, libro.isDisponible());
+
+            ps.executeUpdate();
+            System.out.println(" Libro insertado correctamente en la base de datos.");
+
+        } catch (SQLException e) {
+            System.err.println(" Error al insertar libro: " + e.getMessage());
+        }
+    }
+
+    // OBTENER TODOS LOS LIBROS
+    public List<LibroFisico> obtenerLibros() {
+        List<LibroFisico> lista = new ArrayList<>();
+        String sql = "SELECT * FROM LibrosFisicos"; //  aquí también
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                LibroFisico libro = new LibroFisico(
+                        rs.getInt("id"),
+                        rs.getString("titulo"),
+                        rs.getDate("fechaIngreso").toLocalDate(),
+                        rs.getString("ubicacion"),
+                        rs.getString("condicion"),
+                        rs.getString("autor"),
+                        rs.getInt("numPaginas")
+                );
+                libro.setDisponible(rs.getBoolean("disponible"));
+                lista.add(libro);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al obtener libros: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+    // ELIMINAR LIBRO POR ID
+    public void eliminarLibro(int id) {
+        String sql = "DELETE FROM LibrosFisicos WHERE id = ?"; //  también aquí
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int filas = ps.executeUpdate();
+
+            if (filas > 0) System.out.println("🗑️ Libro eliminado correctamente.");
+            else System.out.println("⚠️ No se encontró libro con ese ID.");
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al eliminar libro: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+package sgbu.DAO;
+
+import sgbu.MODEL.DBConnection;
+import sgbu.MODEL.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.LocalDate;
+import java.util.List;
+
+public class LoginDAO {
+
+    public Usuario login(String email, String password) {
+        String sql = """
+        SELECT id, nombre, email, telefono, password,
+               extra1, extra2, extra3, tipo_usuario, minutosPermitidos
+        FROM Usuarios
+        WHERE email = ? AND password = ?
+        """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            System.out.println("=== DEBUG LOGIN ===");
+            System.out.println("Email buscado: " + email);
+            System.out.println("Password buscado: " + password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) {
+                System.out.println("❌ NO se encontró el usuario");
+                return null;
+            }
+
+            System.out.println("✅ Usuario encontrado: " + rs.getString("nombre"));
+
+            // ✅ CORRECCIÓN: Obtener tipo y limpiar espacios
+            String tipo = rs.getString("tipo_usuario");
+            if (tipo != null) {
+                tipo = tipo.trim().toUpperCase(); // Elimina espacios y convierte a mayúsculas
+            }
+
+            System.out.println("Tipo de usuario: '" + tipo + "'");
+            System.out.println("Longitud del tipo: " + (tipo != null ? tipo.length() : "null"));
+
+            // ========= LOGIN BIBLIOTECARIO =========
+            if ("BIBLIOTECARIO".equals(tipo)) {
+                System.out.println("✅ Creando objeto Bibliotecario");
+                return new Bibliotecario(
+                        rs.getString("id"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("extra1"),
+                        rs.getString("extra2"),
+                        rs.getString("extra3"),
+                        rs.getInt("minutosPermitidos")
+                );
+            }
+
+            // ========= LOGIN ALUMNO =========
+            if ("ALUMNO".equals(tipo)) {
+                System.out.println("✅ Creando objeto Alumno");
+                return new Alumno(
+                        rs.getString("id"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("extra1"),
+                        rs.getString("extra2"),
+                        Integer.parseInt(rs.getString("extra3")),
+                        rs.getInt("minutosPermitidos")
+                );
+            }
+
+            // ========= LOGIN PROFESOR =========
+            if ("PROFESOR".equals(tipo)) {
+                System.out.println("✅ Creando objeto Profesor");
+                return new Profesor(
+                        rs.getString("id"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("extra1"),
+                        rs.getString("extra2"),
+                        rs.getString("extra3"),
+                        rs.getInt("minutosPermitidos")
+                );
+            }
+
+            // ========= LOGIN INVITADO =========
+            if ("INVITADO".equals(tipo)) {
+                System.out.println("✅ Creando objeto Invitado");
+                return new Invitado(
+                        rs.getString("id"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("password"),
+                        rs.getString("extra1"),
+                        rs.getString("extra2"),
+                        rs.getInt("minutosPermitidos"),
+                        rs.getObject("extra1", LocalDate.class)
+                );
+            }
+
+            // ✅ AGREGADO: Mensaje si no coincide ningún tipo
+            System.out.println("❌ Tipo de usuario no reconocido: '" + tipo + "'");
+            return null;
+
+        } catch (Exception e) {
+            System.out.println("❌ ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+} 
+
+
+
+package sgbu.DAO;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import sgbu.MODEL.*;
+
+import java.time.LocalDate;
+
+public class PrestamoDAO {
+
+    // INSERTAR PRÉSTAMO
+    public void insertarPrestamo(Prestamo prestamo) {
+        String sql = "INSERT INTO Prestamos (idUsuario, idRecurso, fechaInicio, fechaDevolucion, estado) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, prestamo.getUsuario().getIdUsuario());
+            ps.setInt(2, prestamo.getRecurso().getId());
+            ps.setDate(3, Date.valueOf(prestamo.getFechaInicio()));
+            ps.setDate(4, Date.valueOf(prestamo.getFechaDevolucion()));
+            ps.setString(5, prestamo.getEstado());
+
+            ps.executeUpdate();
+
+            // Obtener ID generado
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                prestamo.setIdPrestamo(idGenerado);
+            }
+
+            System.out.println("✅ Préstamo registrado correctamente en la base de datos. ID: " + prestamo.getIdPrestamo());
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al insertar préstamo: " + e.getMessage());
+        }
+    }
+
+
+    // LISTAR TODOS LOS PRÉSTAMOS
+    public List<Prestamo> obtenerPrestamos() {
+        List<Prestamo> lista = new ArrayList<>();
+        // ✅ CORRECCIÓN: Sin filtro de biblioteca (la columna no existe en LibrosFisicos)
+        String sql = "SELECT p.idPrestamo, p.idUsuario, u.nombre AS nombreUsuario, " +
+                "p.idRecurso, l.titulo AS tituloLibro, l.autor, " +
+                "p.fechaInicio, p.fechaDevolucion, p.estado, u.minutosPermitidos " +
+                "FROM Prestamos p " +
+                "JOIN Usuarios u ON p.idUsuario = u.id " +
+                "JOIN LibrosFisicos l ON p.idRecurso = l.id";
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                // Crear objetos asociados
+                Usuario u = new Alumno(
+                        rs.getString("idUsuario"),
+                        rs.getString("nombreUsuario"),
+                        "", "", "", "", "", 0,
+                        rs.getInt("minutosPermitidos") // ✅ Ahora sí existe en el SELECT
+                );
+
+                Recurso r = new LibroFisico(
+                        rs.getInt("idRecurso"),
+                        rs.getString("tituloLibro"),
+                        LocalDate.now(), "", "",
+                        rs.getString("autor"), 0
+                );
+
+                Prestamo p = new Prestamo(u, r,
+                        rs.getDate("fechaInicio").toLocalDate(),
+                        rs.getDate("fechaDevolucion").toLocalDate());
+
+                p.setIdPrestamo(rs.getInt("idPrestamo"));
+                p.setEstado(rs.getString("estado"));
+
+                lista.add(p);
+            }
+
+            System.out.println("📋 Total de préstamos cargados: " + lista.size());
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al obtener préstamos: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+
+    // ELIMINAR PRÉSTAMO
+    public void eliminarPrestamo(int idPrestamo) {
+        String sql = "DELETE FROM Prestamos WHERE idPrestamo = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idPrestamo);
+            int filas = ps.executeUpdate();
+
+            if (filas > 0) System.out.println("🗑️ Préstamo eliminado correctamente.");
+            else System.out.println("⚠️ No se encontró préstamo con ese ID.");
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al eliminar préstamo: " + e.getMessage());
+        }
+    }
+
+    // DEVOLVER PRÉSTAMO Y REGISTRAR PENALIZACIÓN
+    public void devolverPrestamo(int idPrestamo, int diasRetraso) {
+        String sqlUpdate = "UPDATE Prestamos SET estado = 'Devuelto', fechaDevolucion = GETDATE() WHERE idPrestamo = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+            conn.setAutoCommit(false);
+
+            // Actualiza estado del préstamo
+            psUpdate.setInt(1, idPrestamo);
+            int filas = psUpdate.executeUpdate();
+
+            if (filas > 0) {
+                System.out.println("✅ Préstamo actualizado como devuelto en la base de datos.");
+
+                // Si hubo retraso, registrar penalización
+                if (diasRetraso > 0) {
+                    double monto = diasRetraso * 1.5;
+
+                    String sqlPenal = "INSERT INTO Penalizaciones (idPrestamo, diasRetraso, monto) VALUES (?, ?, ?)";
+                    try (PreparedStatement psPenal = conn.prepareStatement(sqlPenal)) {
+                        psPenal.setInt(1, idPrestamo);
+                        psPenal.setInt(2, diasRetraso);
+                        psPenal.setDouble(3, monto);
+                        psPenal.executeUpdate();
+                        System.out.println("💰 Penalización registrada: " + monto + " por " + diasRetraso + " días de retraso.");
+                    }
+                }
+
+                conn.commit();
+                System.out.println("✅ Cambios guardados en la base de datos.");
+
+            } else {
+                System.out.println("⚠️ No se encontró préstamo con ese ID.");
+                conn.rollback();
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al devolver préstamo: " + e.getMessage());
+            try (Connection conn = DBConnection.getConnection()) {
+                conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("❌ Error al hacer rollback: " + ex.getMessage());
+            }
+        }
+    }
+
+    // ✅ CORRECCIÓN: Agregué u.minutosPermitidos al SELECT
+    public List<Prestamo> obtenerPrestamosPorUsuario(String idUsuario) {
+        List<Prestamo> lista = new ArrayList<>();
+        String sql = "SELECT p.idPrestamo, p.idUsuario, u.nombre AS nombreUsuario, " +
+                "p.idRecurso, l.titulo AS tituloLibro, l.autor, " +
+                "p.fechaInicio, p.fechaDevolucion, p.estado, u.minutosPermitidos " +
+                "FROM Prestamos p " +
+                "JOIN Usuarios u ON p.idUsuario = u.id " +
+                "JOIN LibrosFisicos l ON p.idRecurso = l.id " +
+                "WHERE p.idUsuario = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, idUsuario);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Usuario u = new Alumno(
+                        rs.getString("idUsuario"),
+                        rs.getString("nombreUsuario"),
+                        "", "", "", "", "", 0,
+                        rs.getInt("minutosPermitidos") // ✅ Ahora sí existe en el SELECT
+                );
+
+                Recurso r = new LibroFisico(
+                        rs.getInt("idRecurso"),
+                        rs.getString("tituloLibro"),
+                        LocalDate.now(), "", "",
+                        rs.getString("autor"), 0
+                );
+
+                Prestamo p = new Prestamo(u, r,
+                        rs.getDate("fechaInicio").toLocalDate(),
+                        rs.getDate("fechaDevolucion").toLocalDate());
+
+                p.setIdPrestamo(rs.getInt("idPrestamo"));
+                p.setEstado(rs.getString("estado"));
+
+                lista.add(p);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al obtener préstamos del usuario: " + e.getMessage());
+        }
+
+        return lista;
+    }
+}  
+
+
+
+
+package sgbu.DAO;
+
+//import sgbu.model.*;
+import sgbu.MODEL.*;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RecursoDAO {
+
+    // =========================
+    // INSERTAR UN RECURSO
+    // =========================
+    public void insertarRecurso(Recurso recurso) {
+        String sql = "INSERT INTO Recursos (id, titulo, tipo_recurso, fechaIngreso, disponible, extra1, extra2, extra3, extra4) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, recurso.getId());
+            ps.setString(2, recurso.getTitulo());
+            ps.setString(3, recurso.getClass().getSimpleName().toUpperCase());
+            ps.setDate(4, Date.valueOf(recurso.getFechaIngreso()));
+            ps.setBoolean(5, recurso.isDisponible());
+
+            // Extra1 ~ Extra4
+            String[] extras = obtenerExtrasDeRecurso(recurso);
+            ps.setString(6, extras[0]);
+            ps.setString(7, extras[1]);
+            ps.setString(8, extras[2]);
+            ps.setString(9, extras[3]);
+            ps.setInt(10, recurso.getCantidadDisponible());
+
+            ps.executeUpdate();
+            System.out.println("✅ Recurso insertado: " + recurso.getTitulo());
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al insertar recurso: " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // LISTAR TODOS LOS RECURSOS
+    // =========================
+    public List<Recurso> listarRecursos() {
+
+        List<Recurso> lista = new ArrayList<>();
+        String sql = "SELECT * FROM Recurso";
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Recurso r = construirDesdeResultSet(rs);
+                if (r != null) lista.add(r);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al listar recursos: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+    // =========================
+    // BUSCAR POR ID
+    // =========================
+    public Recurso buscarPorId(int id) {
+        String sql = "SELECT * FROM Recursos WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return construirDesdeResultSet(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al buscar recurso: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    // =========================
+    // UTILS: Construir desde ResultSet
+    // =========================
+    private Recurso construirDesdeResultSet(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String titulo = rs.getString("titulo");
+        String tipo = rs.getString("tipo_recurso").replace("_", "").toUpperCase();
+        LocalDate fecha = rs.getDate("fechaIngreso").toLocalDate();
+        boolean disponible = rs.getBoolean("disponible");
+
+        String e1 = rs.getString("extra1");
+        String e2 = rs.getString("extra2");
+        String e3 = rs.getString("extra3");
+        String e4 = rs.getString("extra4");
+
+        Recurso r = switch (tipo.toUpperCase()) {
+            // === Recurso Físico ===
+            case "LIBROFISICO" -> new LibroFisico(id, titulo, fecha, e1, e2, e3, parseIntOrDefault(e4, 0));
+            case "REVISTA"     -> new Revista(id, titulo, fecha, e1, e2, parseIntOrDefault(e3, 0), parseIntOrDefault(e4, 0));
+
+            case "TABLET"      -> new Tablet(id, titulo, fecha, "UBICACION_X", "CONDICION_X", e1, e2, parseDoubleOrDefault(e3, 0.0));
+
+            case "LAPTOP"      -> new Laptop(id, titulo, fecha, e1, e2, e3, e4, parseIntOrDefault(rs.getString("extra3"), 0), rs.getString("extra4"));
+
+            case "MULTIMETRO"  -> new Multimetro(id, titulo, fecha, e1, e2, e3, e4);
+            case "MICROSCOPIO" -> new Microscopio(id, titulo, fecha, e1, e2, e3, parseIntOrDefault(e4, 0));
+            case "PROYECTOR"   -> new Proyector(id, titulo, fecha, e1, e2, e3, e4, parseIntOrDefault(rs.getString("extra4"), 0));
+
+            // === Recurso Digital ===
+            case "LIBRODIGITAL"     -> new LibroDigital(id, titulo, fecha, e1, e2, e3, parseIntOrDefault(e4, 0));
+            case "ARTICULODIGITAL"  -> new ArticuloDigital(id, titulo, fecha, e1, e2, e3, e4);
+            case "TESISDIGITAL"     -> new TesisDigital(id, titulo, fecha, e1, e2, e3, e4);
+
+            // === Ambientes ===
+            case "SALAESTUDIO" -> new SalaEstudio(id, titulo, fecha, e1, e2, parseIntOrDefault(e3, 0), parseIntOrDefault(e4, 0));
+            case "SALALECTURA" -> new SalaLectura(id, titulo, fecha, e1, e2, parseIntOrDefault(e3, 0), parseIntOrDefault(e4, 0));
+
+            default -> null; // Tipo desconocido
+        };
+
+
+        if (r != null) {
+            r.setDisponible(disponible);
+            r.setCantidadDisponible(rs.getInt("cantidadDisponible")); // 🔹 Línea que debes agregar
+        }
+        return r;
+
+    }
+
+    // =========================
+    // UTILS: Extras según tipo
+    // =========================
+    public String[] obtenerExtrasDeRecurso(Recurso r) {
+        String[] extras = new String[4];
+        if (r instanceof LibroFisico l) {
+            extras[0] = l.getUbicacionEstante();
+            extras[1] = l.getCondicion();
+            extras[2] = l.getAutor();
+            extras[3] = String.valueOf(l.getNumPaginas());
+        } else if (r instanceof Revista v) {
+            extras[0] = v.getUbicacionEstante();
+            extras[1] = v.getCondicion();
+            extras[2] = String.valueOf(v.getVolumen());
+            extras[3] = String.valueOf(v.getNumero());
+        } else if (r instanceof Dispositivo d) {
+            extras[0] = d.getUbicacionEstante();
+            extras[1] = d.getCondicion();
+            extras[2] = d.getMarca();
+            extras[3] = d.getModelo();
+        } else if (r instanceof Laptop l) {
+            extras[0] = l.getUbicacionEstante();
+            extras[1] = l.getCondicion();
+            extras[2] = String.valueOf(l.getRamGb());
+            extras[3] = l.getProcesador();
+        } else if (r instanceof Tablet t) {
+            extras[0] = t.getUbicacionEstante();
+            extras[1] = t.getCondicion();
+            extras[2] = t.getMarca();
+            extras[3] = String.valueOf(t.getTamanoPantalla());
+        } else if (r instanceof Instrumento i) {
+            extras[0] = i.getUbicacionEstante();
+            extras[1] = i.getCondicion();
+            extras[2] = i.getDescripcion();
+        } else if (r instanceof Multimetro m) {
+            extras[0] = m.getUbicacionEstante();
+            extras[1] = m.getCondicion();
+            extras[2] = m.getDescripcion();
+            extras[3] = m.getRango();
+        } else if (r instanceof Microscopio m) {
+            extras[0] = m.getUbicacionEstante();
+            extras[1] = m.getCondicion();
+            extras[2] = m.getDescripcion();
+            extras[3] = String.valueOf(m.getAumentosMax());
+        } else if (r instanceof Proyector p) {
+            extras[0] = p.getUbicacionEstante();
+            extras[1] = p.getCondicion();
+            extras[2] = p.getDescripcion();
+            extras[3] = String.valueOf(p.getBrillo());
+        } else if (r instanceof LibroDigital d) {
+            extras[0] = d.getFormato();
+            extras[1] = d.getUrlAcceso();
+            extras[2] = d.getAutor();
+            extras[3] = String.valueOf(d.getNumPaginas());
+        } else if (r instanceof ArticuloDigital a) {
+            extras[0] = a.getFormato();
+            extras[1] = a.getUrlAcceso();
+            extras[2] = a.getRevistaOrigen();
+            extras[3] = a.getDoi();
+        } else if (r instanceof TesisDigital t) {
+            extras[0] = t.getFormato();
+            extras[1] = t.getUrlAcceso();
+            extras[2] = t.getAutor();
+            extras[3] = t.getUniversidad();
+        } else if (r instanceof SalaEstudio s) {
+            extras[0] = s.getUbicacionEstante();
+            extras[1] = s.getCondicion();
+            extras[2] = String.valueOf(s.getCapacidad());
+            extras[3] = String.valueOf(s.getNumMesas());
+        } else if (r instanceof SalaLectura s) {
+            extras[0] = s.getUbicacionEstante();
+            extras[1] = s.getCondicion();
+            extras[2] = String.valueOf(s.getCapacidad());
+            extras[3] = String.valueOf(s.getNumSillas());
+        } else if (r instanceof Ambiente a) {
+            extras[0] = a.getUbicacionEstante();
+            extras[1] = a.getCondicion();
+            extras[2] = String.valueOf(a.getCapacidad());
+        }
+        return extras;
+    }
+
+    private int parseIntOrDefault(String s, int def) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+    private double parseDoubleOrDefault(String valor, double defecto) {
+        try {
+            return Double.parseDouble(valor);
+        } catch (NumberFormatException e) {
+            return defecto;
+        }
+    }
+    public boolean eliminarRecurso(int id) {
+        String sql = "DELETE FROM Recursos WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int filas = ps.executeUpdate();
+            return filas > 0;
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al eliminar recurso de BD: " + e.getMessage());
+            return false;
+        }
+    }
+    public void actualizarCantidadDisponible(int id, int nuevaCantidad) {
+        String sql = "UPDATE Recursos SET cantidadDisponible = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, nuevaCantidad);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al actualizar cantidadDisponible: " + e.getMessage());
+        }
+    }
+
+
+    public Recurso obtenerExtrasDeRecurso() {
+        return obtenerExtrasDeRecurso();
+    }
+}
+
+
+
+
+
+package sgbu.DAO;
+
+import sgbu.MODEL.*;
+import java.sql.*;
+import java.util.List;
+
+public class UsuarioDAO {
+
+    private String idUsuario;
+
+    // ============================================================
+    //               BUSCAR POR ID
+    // ============================================================
+    public Usuario buscarPorId() {
+        String sql = "SELECT * FROM Usuarios WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, idUsuario);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapUsuario(rs);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error al buscar usuario: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+
+    // ============================================================
+    //               INSERTAR USUARIO
+    // ============================================================
+    public boolean insertar(Usuario u) {
+        String sql =
+                "INSERT INTO Usuarios (id, nombre, email, telefono, password, tipo_usuario, " +
+                        "extra1, extra2, extra3, minutosPermitidos) VALUES (?,?,?,?,?,?,?,?,?,?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, u.getIdUsuario());
+            stmt.setString(2, u.getNombre());
+            stmt.setString(3, u.getEmail());
+            stmt.setString(4, u.getTelefono());
+            stmt.setString(5, u.getPassword());
+            stmt.setString(6, u.getRol());
+
+            if (u instanceof Alumno a) {
+                stmt.setString(7, a.getCarrera());
+                stmt.setString(8, a.getCodigoAlumno());
+                stmt.setString(9, String.valueOf(a.getCiclo()));
+            }
+            else if (u instanceof Profesor p) {
+                stmt.setString(7, p.getFacultad());
+                stmt.setString(8, p.getEspecialidad());
+                stmt.setString(9, p.getCodigoProfesor());
+            }
+            else if (u instanceof Invitado i) {
+                stmt.setString(7, i.getTipoInvitado());
+                stmt.setString(8, i.getFechaExpiracion().toString());
+                stmt.setString(9, null);
+            }
+            else if (u instanceof Bibliotecario b) {
+                stmt.setString(7, String.valueOf(b.getIdEmpleado()));
+                stmt.setString(8, b.getTurno());
+                stmt.setString(9, b.getEspecialidad());
+            }
+
+            stmt.setInt(10, u.getMinutosPermitidos());
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error al insertar usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    // ============================================================
+    //               REGISTRAR
+    // ============================================================
+    public boolean registrar(Usuario u) {
+
+        Usuario existe = buscarPorId();
+        if (existe != null) {
+            System.out.println("⚠️ Ya existe un usuario con ID: " + u.getIdUsuario());
+            return false;
+        }
+
+        return insertar(u);
+    }
+
+
+    // ============================================================
+    //               ACTUALIZAR
+    // ============================================================
+    public boolean actualizar(Usuario u) {
+        String sql = "UPDATE Usuarios SET nombre = ?, email = ?, telefono = ?, " +
+                "password = ?, tipo_usuario = ?, extra1 = ?, extra2 = ?, " +
+                "extra3 = ?, minutosPermitidos = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, u.getNombre());
+            stmt.setString(2, u.getEmail());
+            stmt.setString(3, u.getTelefono());
+            stmt.setString(4, u.getPassword());
+            stmt.setString(5, u.getRol());
+
+            if (u instanceof Alumno a) {
+                stmt.setString(6, a.getCarrera());
+                stmt.setString(7, a.getCodigoAlumno());
+                stmt.setString(8, String.valueOf(a.getCiclo()));
+            }
+            else if (u instanceof Profesor p) {
+                stmt.setString(6, p.getFacultad());
+                stmt.setString(7, p.getEspecialidad());
+                stmt.setString(8, p.getCodigoProfesor());
+            }
+            else if (u instanceof Invitado i) {
+                stmt.setString(6, i.getTipoInvitado());
+                stmt.setString(7, i.getFechaExpiracion().toString());
+                stmt.setString(8, null);
+            }
+            else if (u instanceof Bibliotecario b) {
+                stmt.setString(6, String.valueOf(b.getIdEmpleado()));
+                stmt.setString(7, b.getTurno());
+                stmt.setString(8, b.getEspecialidad());
+            }
+
+            stmt.setInt(9, u.getMinutosPermitidos());
+            stmt.setString(10, u.getIdUsuario());
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error al actualizar usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    // ============================================================
+    //               ELIMINAR
+    // ============================================================
+    public boolean eliminar(String idUsuario) {
+        String sql = "DELETE FROM Usuarios WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, idUsuario);
+            int filasAfectadas = stmt.executeUpdate();
+
+            if (filasAfectadas > 0) {
+                System.out.println("✅ Usuario eliminado: " + idUsuario);
+                return true;
+            } else {
+                System.out.println("⚠️ No se encontró usuario con ID: " + idUsuario);
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error al eliminar usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    // ============================================================
+    //               MAPEAR RESULTSET → OBJETO
+    // ============================================================
+    private Usuario mapUsuario(ResultSet rs) throws SQLException {
+
+        String tipo = rs.getString("tipo_usuario");
+
+        return switch (tipo) {
+
+            case "ALUMNO" -> new Alumno(
+                    rs.getString("id"),
+                    rs.getString("nombre"),
+                    rs.getString("email"),
+                    rs.getString("telefono"),
+                    rs.getString("password"),
+                    rs.getString("extra1"),     // carrera
+                    rs.getString("extra2"),     // codigo alumno
+                    Integer.parseInt(rs.getString("extra3")),
+                    rs.getInt("minutosPermitidos")
+            );
+
+            case "PROFESOR" -> new Profesor(
+                    rs.getString("id"),
+                    rs.getString("nombre"),
+                    rs.getString("email"),
+                    rs.getString("telefono"),
+                    rs.getString("password"),
+                    rs.getString("extra1"),      // facultad
+                    rs.getString("extra2"),      // especialidad
+                    rs.getString("extra3"),      // codigo profesor
+                    rs.getInt("minutosPermitidos")
+            );
+
+            case "INVITADO" -> new Invitado(
+                    rs.getString("id"),
+                    rs.getString("nombre"),
+                    rs.getString("email"),
+                    rs.getString("telefono"),
+                    rs.getString("password"),
+                    rs.getString("extra1"),
+                    rs.getDate("extra2").toLocalDate(),
+                    rs.getInt("minutosPermitidos")
+            );
+
+            case "BIBLIOTECARIO" -> new Bibliotecario(
+                    rs.getString("id"),
+                    rs.getString("nombre"),
+                    rs.getString("email"),
+                    rs.getString("telefono"),
+                    rs.getString("password"),
+                    rs.getString("extra2")
+            );
+
+            default -> null;
+        };
+    }
+
+    public List<Usuario> listarUsuarios() {
+        return listarUsuarios();
+    }
+
+    public Usuario login() {
+        return login();
+    }
+}
