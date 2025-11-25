@@ -1,3 +1,36 @@
+package sgbu.model;
+
+import java.time.LocalDate;
+
+public class ArticuloDigital extends RecursoDigital {
+    private String revistaOrigen;
+    private String doi;
+
+    public ArticuloDigital(int id, String titulo, LocalDate fechaIngreso,
+                           String formato, String urlAcceso, String revistaOrigen, String doi) {
+        super(id, titulo, fechaIngreso, formato, urlAcceso);
+        this.revistaOrigen = revistaOrigen;
+        this.doi = doi;
+    }
+
+    public String generarReferencia() {
+        return revistaOrigen + " - DOI: " + doi;
+    }
+
+    @Override
+    public String consultarDetalles() {
+        return String.format("ArticuloDigital[id=%d, titulo=%s, revista=%s, doi=%s]", id, titulo, revistaOrigen, doi);
+    }
+    public String getRevistaOrigen() {
+    return revistaOrigen;
+}
+
+    public String getDoi() {
+    return doi;
+}
+
+}
+
 Biblioteca
 import java.time.LocalDate;
 import java.util.ArrayList;
