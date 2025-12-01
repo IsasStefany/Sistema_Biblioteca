@@ -697,6 +697,8 @@ public abstract class RecursoFisico extends Recurso implements Reservable {
         return String.format("Fisico[id=%d,titulo=%s,estante=%s,cond=%s,disp=%b]", id, titulo, ubicacionEstante, condicion, disponible);
     }
 }
+//SistemaBiblioteca
+
 package sgbu.ui;
 
 import sgbu.dao.*;
@@ -721,7 +723,7 @@ public class SistemaBiblioteca {
 
         while (true) {
             System.out.println("\n=== 🔐 Sistema de Biblioteca - Login ===");
-            System.out.print("ID Bibliotecario: ");
+            System.out.print("ID: ");
             String id = sc.nextLine();
 
             System.out.print("Password: ");
@@ -729,12 +731,29 @@ public class SistemaBiblioteca {
 
             Usuario usuario = biblioteca.buscarUsuarioPorId(id);
 
-            if (usuario instanceof Bibliotecario biblio && biblio.getPassword().equals(password)) {
-                System.out.println("✅ Bienvenido bibliotecario: " + biblio.getNombre());
-                mostrarMenuBibliotecario();
+            if (usuario == null) {
+                System.out.println("❌ Usuario no encontrado.");
+            } else if (!usuario.getPassword().equals(password)) {
+                System.out.println("❌ Contraseña incorrecta.");
             } else {
-                System.out.println("❌ Credenciales incorrectas o usuario no es bibliotecario.");
+                // Usuario válido y contraseña correcta
+                if (usuario instanceof Bibliotecario biblio) {
+                    System.out.println("✅ Bienvenido bibliotecario: " + biblio.getNombre());
+                    mostrarMenuBibliotecario();
+                } else if (usuario instanceof Alumno alumno) {
+                    System.out.println("✅ Bienvenido alumno(a): " + alumno.getNombre());
+                    mostrarMenuAlumno(alumno);
+                } else if (usuario instanceof Profesor profesor) {
+                    System.out.println("✅ Bienvenido profesor(a): " + profesor.getNombre());
+                    mostrarMenuProfesor(profesor);
+                } else if (usuario instanceof Invitado invitado) {
+                    System.out.println("✅ Bienvenido invitado: " + invitado.getNombre());
+                    mostrarMenuInvitado();
+                } else {
+                    System.out.println("❌ Tipo de usuario no reconocido.");
+                }
             }
+
         }
     }
 
@@ -816,9 +835,19 @@ public class SistemaBiblioteca {
                 case 3 -> {
                     System.out.print("ID a eliminar: ");
                     String id = sc.nextLine();
-                    boolean eliminado = biblioteca.eliminarUsuario(id);
-                    System.out.println(eliminado ? "✅ Eliminado." : "❌ No encontrado.");
+
+                    boolean eliminadoBD = usuarioDAO.eliminarUsuario(id);         // ❗ Elimina en BD
+                    boolean eliminadoMem = biblioteca.eliminarUsuario(id);        // ❗ Elimina en memoria
+
+                    if (eliminadoBD && eliminadoMem) {
+                        System.out.println("✅ Usuario eliminado correctamente.");
+                    } else if (!eliminadoBD) {
+                        System.out.println("❌ Error al eliminar usuario de la base de datos.");
+                    } else {
+                        System.out.println("❌ Usuario no encontrado en memoria.");
+                    }
                 }
+
                 case 4 -> registrarNuevoUsuario();
                 case 0 -> System.out.println("↩️ Volviendo...");
                 default -> System.out.println("❌ Opción inválida.");
@@ -923,9 +952,19 @@ public class SistemaBiblioteca {
             case 3 -> {
                 System.out.print("ID recurso a eliminar: ");
                 int id = leerEntero();
-                boolean eliminado = biblioteca.eliminarRecurso(id);
-                System.out.println(eliminado ? "✅ Recurso eliminado." : "❌ No se encontró el recurso.");
+
+                boolean eliminadoBD = recursoDAO.eliminarRecurso(id);          // ❗ BD
+                boolean eliminadoMem = biblioteca.eliminarRecurso(id);         // ❗ Memoria
+
+                if (eliminadoBD && eliminadoMem) {
+                    System.out.println("✅ Recurso eliminado correctamente.");
+                } else if (!eliminadoBD) {
+                    System.out.println("❌ Error al eliminar recurso de la base de datos.");
+                } else {
+                    System.out.println("❌ Recurso no encontrado en memoria.");
+                }
             }
+
             case 4 -> registrarNuevoRecurso();  // ⬅️ Nueva acción
 
             case 0 -> System.out.println("↩️ Volviendo...");
@@ -1178,12 +1217,18 @@ public class SistemaBiblioteca {
                     System.out.print("ID préstamo: ");
                     int id = leerEntero();
                     Prestamo p = biblioteca.buscarPrestamoPorId(id);
+
                     if (p != null) {
-                        biblioteca.registrarDevolucion(p);
+                        biblioteca.registrarDevolucion(p); // ya inserta en tabla Devoluciones
+
+                        // 🔧 Agrega esto:
+                        devolucionDAO.actualizarEstadoPrestamoADevuelto(p.getIdPrestamo());
+
                     } else {
                         System.out.println("❌ Préstamo no encontrado.");
                     }
-                }
+}
+
                 case 3 -> biblioteca.mostrarPrestamosBD();
                 case 4 -> biblioteca.mostrarDevolucionesBD();
                 case 0 -> System.out.println("↩️ Volviendo...");
@@ -1210,103 +1255,110 @@ public class SistemaBiblioteca {
             return -1;
         }
     }
+    //MENU ALUMNO
+    private static void mostrarMenuAlumno(Alumno alumno) {
+    int opcion;
+    do {
+        System.out.println("\n🎓 --- Menú Alumno ---");
+        System.out.println("1. Ver recursos disponibles");
+        System.out.println("2. Solicitar préstamo");
+        System.out.println("3. Ver historial de préstamos");
+        System.out.println("0. Cerrar sesión");
+
+        System.out.print("Seleccione una opción: ");
+        opcion = leerEntero();
+
+        switch (opcion) {
+            case 1 -> biblioteca.mostrarRecursos();
+            case 2 -> {
+                System.out.print("ID recurso: ");
+                int idR = leerEntero();
+                Recurso recurso = biblioteca.buscarRecursoPorId(idR);
+                if (recurso != null) {
+                    biblioteca.registrarPrestamo(alumno, recurso);
+                } else {
+                    System.out.println("❌ Recurso no encontrado.");
+                }
+            }
+            case 3 -> {
+                List<Prestamo> historial = alumno.verHistorialPrestamos(biblioteca);
+                if (historial.isEmpty()) {
+                    System.out.println("📭 Sin préstamos previos.");
+                } else {
+                    historial.forEach(System.out::println);
+                }
+            }
+            case 0 -> System.out.println("👋 Sesión cerrada.");
+            default -> System.out.println("❌ Opción inválida.");
+        }
+
+    } while (opcion != 0);
+    }
+    //MENU PROFESOR
+    private static void mostrarMenuProfesor(Profesor profesor) {
+    int opcion;
+    do {
+        System.out.println("\n🧑‍🏫 --- Menú Profesor ---");
+        System.out.println("1. Ver recursos disponibles");
+        System.out.println("2. Solicitar préstamo");
+        System.out.println("3. Ver historial de préstamos");
+        System.out.println("0. Cerrar sesión");
+
+        System.out.print("Seleccione una opción: ");
+        opcion = leerEntero();
+
+        switch (opcion) {
+            case 1 -> biblioteca.mostrarRecursos();
+            case 2 -> {
+                System.out.print("ID recurso: ");
+                int idR = leerEntero();
+                Recurso recurso = biblioteca.buscarRecursoPorId(idR);
+                if (recurso != null) {
+                    biblioteca.registrarPrestamo(profesor, recurso);
+                } else {
+                    System.out.println("❌ Recurso no encontrado.");
+                }
+            }
+            case 3 -> {
+                List<Prestamo> historial = profesor.verHistorialPrestamos(biblioteca);
+                if (historial.isEmpty()) {
+                    System.out.println("📭 Sin préstamos previos.");
+                } else {
+                    historial.forEach(System.out::println);
+                }
+            }
+            case 0 -> System.out.println("👋 Sesión cerrada.");
+            default -> System.out.println("❌ Opción inválida.");
+        }
+
+    } while (opcion != 0);
+    }
+    //MENU INVITADO
+    private static void mostrarMenuInvitado() {
+    int opcion;
+    do {
+        System.out.println("\n👤 --- Menú Invitado ---");
+        System.out.println("1. Ver recursos disponibles");
+        System.out.println("0. Cerrar sesión");
+
+        System.out.print("Seleccione una opción: ");
+        opcion = leerEntero();
+
+        switch (opcion) {
+            case 1 -> biblioteca.mostrarRecursos();
+            case 0 -> System.out.println("👋 Sesión cerrada.");
+            default -> System.out.println("❌ Opción inválida.");
+        }
+
+    } while (opcion != 0);
+    }
+
+
+
     
 }
 
-package sgbu.model;
-
-import java.time.LocalDate;
-
-public class TesisDigital extends RecursoDigital {
-    private String autor;
-    private String universidad;
-
-    public TesisDigital(int id, String titulo, LocalDate fechaIngreso,
-                        String formato, String urlAcceso, String autor, String universidad) {
-        super(id, titulo, fechaIngreso, formato, urlAcceso);
-        this.autor = autor;
-        this.universidad = universidad;
-    }
-
-    public String consultarResumen() {
-        return "Resumen simulado de la tesis.";
-    }
-
-    @Override
-    public String consultarDetalles() {
-        return String.format("TesisDigital[id=%d, titulo=%s, autor=%s, universidad=%s]",
-                id, titulo, autor, universidad);
-    }
-    public String getAutor() {
-        return autor;
-    }
-
-    @Override
-    public String getUrlAcceso() {
-        return urlAcceso;
-    }
-
-    @Override
-    public String getFormato() {
-        return formato;
-    }
-
-    public String getUniversidad() {
-        return universidad;
-    }
-    
-}
 
 
 
-RecursoDigital
-import java.time.LocalDate;
-
-public abstract class RecursoDigital extends Recurso {
-    protected String formato;
-    protected String urlAcceso;
-
-    public RecursoDigital(int id, String titulo, LocalDate fechaIngreso, String formato, String urlAcceso) {
-        super(id, titulo, fechaIngreso);
-        this.formato = formato;
-        this.urlAcceso = urlAcceso;
-    }
-
-    public String getFormato() { return formato; }
-    public String getUrlAcceso() { return urlAcceso; }
-
-    public void visualizarOnline() {
-        System.out.println("Abriendo visor para: " + titulo + " en " + urlAcceso);
-    }
-
-    public void descargar() {
-        System.out.println("Descargando: " + titulo + " formato " + formato);
-    }
-
-    @Override
-    public String consultarDetalles() {
-        return String.format("Digital[id=%d,titulo=%s,formato=%s,url=%s]", id, titulo, formato, urlAcceso);
-    }
-}
-
-
-
-
-
-
-Ambiente
-import java.time.LocalDate;
-
-public abstract class Ambiente extends RecursoFisico {
-    protected int capacidad;
-    public Ambiente(int id, String titulo, LocalDate fechaIngreso, String ubicacion, String condicion, int capacidad) {
-        super(id, titulo, fechaIngreso, ubicacion, condicion);
-        this.capacidad = capacidad;
-    }
-    public int getCapacidad() { return capacidad; }
-
-    @Override
-    public String consultarDetalles() {
-        return String.format("Ambiente[id=%d,titulo=%s,capacidad=%d]", id, titulo, capacidad);
-    }
 }
